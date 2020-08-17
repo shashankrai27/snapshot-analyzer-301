@@ -1,4 +1,5 @@
 import boto3
+import botocore
 import click
 
 session = boto3.Session(profile_name='snapshot')
@@ -24,8 +25,9 @@ def snapshots():
 
 @snapshots.command('list')
 @click.option('--project', default=None, help="Only snapshots for project(tag project:<name>)")
-def list_volumes(project):
-    "List EC2 Instance volumes"
+@click.option('--all', 'list_all', default=False, is_flag=True, help="List all snapshots, not just the most recent one")
+def list_snapshots(project, list_all):
+    "List EC2 Instance volume snapshots"
     instances = filter_instances(project)
     for i in instances:
         for v in i.volumes.all():
@@ -38,6 +40,8 @@ def list_volumes(project):
                     s.progress,
                     s.start_time.strftime("%c")
                 )))
+                if s.state == "completed" and not list_all:
+                    break
     return
 
 @cli.group('volumes')
@@ -83,7 +87,7 @@ def create_snapshots(project):
         print("starting...{0}".format(i.id))
         i.start()
         i.wait_until_running()
-    print("Job done!!")    
+    print("Job done!!")
     return
 
 @instances.command('list')
@@ -109,8 +113,12 @@ def stop_instances(project):
     "Stop EC2 instances"
     instances = filter_instances(project)
     for i in instances:
-        print("Stopping instance with id {0}...".format(i.id))
-        i.stop()
+        print("Stopping instance with id {0}.... ".format(i.id))
+        try:
+            i.stop()
+        except botocore.exceptions.ClientError as e:
+            print("Could not stop{0}".format(i.id) + str(e))
+            continue
 
     return
 
@@ -120,8 +128,12 @@ def start_instances(project):
     "Start EC2 instances"
     instances = filter_instances(project)
     for i in instances:
-        print("Starting instance with id {0}...".format(i.id))
-        i.start()
+        print("Starting instance with id {0}.... ".format(i.id))
+        try:
+            i.start()
+        except botocore.exceptions.ClientError as e:
+            print("Could not start{0}".format(i.id) + str(e))
+            continue
 
     return
 
