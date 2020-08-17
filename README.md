@@ -13,6 +13,7 @@ snapshot uses the config file created by the AWS cli. e.g.
 
 ## Running
 
-`pipenv run python .\shotty\shotty.py` <command> <--project=PROJECT>
-*command* is list, stop, or start
+`pipenv run python .\shotty\shotty.py` <command> <subcommand> <--project=PROJECT>
+*command* is instances, volumes, or Snapshots
+*subcommand* - depends on command, use *command* --help
 *project* is optional
